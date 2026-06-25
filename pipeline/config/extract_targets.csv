@@ -1,0 +1,4 @@
+label,display_name,ref_accession,taxon_taxid,taxon_sci_name
+mpox_cladeia,Mpox Clade Ia,NC_003310.1,10244,Monkeypox virus
+mpox_cladeib,Mpox Clade Ib,PP899475.1,10244,Monkeypox virus
+mpox_cladeii,Mpox Clade II,NC_063383.1,10244,Monkeypox virus

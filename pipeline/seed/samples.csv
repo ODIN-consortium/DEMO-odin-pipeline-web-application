@@ -1,0 +1,10 @@
+site_ID;sample_type;depth;elevation;sample_code;sampling_date;comments_sampling;partner_sample_code;date_extraction;nucleic_acid_concentration;extract_volume;comments_extraction;elution_volume
+DVDVRV;WW;;;DVDVRV_WW;20260610;Grab sample;;20260610;;;;;
+DVDVWP;DW;;;DVDVWP_DW;20260610;Grab sample;;20260610;;;;;
+DVDVRV;WW;;;DVDVRV_WW;20260611;Grab sample;;20260611;;;;;
+DVDVWP;DW;;;DVDVWP_DW;20260611;Grab sample;;20260611;;;;;
+AAAVRV;WW;;;AAAVRV_WW;20240101;Grab sample;;20240101;;;;;
+AAAVWP;DW;;;AAAVWP_DW;20240101;Grab sample;;20240101;;;;;
+BBBCRV;WW;;;BBBCRV_WW;20240101;Grab sample;;20240101;;;;;
+BBBCWP;DW;;;BBBCWP_DW;20240101;Grab sample;;20240101;;;;;
+DVDVRV;WW;;;DVDVRV_WW;20260115;Grab sample;;20260115;;;;;

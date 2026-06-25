@@ -1,0 +1,7 @@
+instrument_position=MN37872
+flow_cell_id=FAX00002
+protocol_group_id=DemoExperiment
+sample_id=DemoSample2
+protocol=sequencing/sequencing_PRO002_DNA_e8_2_400K_4khz:FLO-MIN114:SQK-RBK114-24:400
+started=2026-06-11T08:00:00+00:00
+acquisition_stopped=2026-06-11T12:30:00+00:00

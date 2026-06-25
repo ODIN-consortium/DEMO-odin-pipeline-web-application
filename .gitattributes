@@ -1,0 +1,14 @@
+# Normalise all text files to LF in the repo and on checkout.
+# This repo runs inside Linux/WSL2 containers — CRLF will break shell scripts
+# and config files parsed by Linux tools.
+* text=auto eol=lf
+
+# LFS — large binary files
+*.fastq.gz     filter=lfs diff=lfs merge=lfs -text
+*.k2d          filter=lfs diff=lfs merge=lfs -text
+*.kmer_distrib filter=lfs diff=lfs merge=lfs -text
+
+# Explicitly binary — no line-ending processing
+*.xlsx -text
+*.png  -text
+*.jpg  -text

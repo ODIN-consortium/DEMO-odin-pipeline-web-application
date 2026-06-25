@@ -1,0 +1,6 @@
+run_accession;barcode;sample_code;sampling_date;protocol_id;sequencing_kit_id;type;runName;sampleName
+20260610_0800_MN37872_FAX00001_aabb1234;barcode01;DVDVRV_WW;20260610;P2;RB_GEN;test_sample;DemoExperiment;DemoSample1
+20260610_0800_MN37872_FAX00001_aabb1234;barcode02;DVDVWP_DW;20260610;P2;RB_GEN;test_sample;DemoExperiment;DemoSample1
+20260611_0800_MN37872_FAX00002_ccdd5678;barcode01;DVDVRV_WW;20260611;P2;RB_GEN;test_sample;DemoExperiment;DemoSample2
+20260611_0800_MN37872_FAX00002_ccdd5678;barcode02;DVDVWP_DW;20260611;P2;RB_GEN;test_sample;DemoExperiment;DemoSample2
+20260115_0800_MN37872_FAX00003_ee112233;barcode01;DVDVRV_WW;20260115;P5;RB_AMP;test_sample;DemoExperiment;MpoxDemoRun

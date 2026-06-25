@@ -1,0 +1,120 @@
+# Docker Compose — Docker Engine variant
+# Requires Docker Engine on the host.  The API container mounts the Docker socket
+# (Docker-outside-of-Docker) so Nextflow can spawn pipeline tool containers as
+# siblings on the host.
+#
+# SECURITY NOTE: The API container is intentionally not published on any host
+# port — it is only reachable from within the Compose network (by the nginx
+# frontend).  /var/run/docker.sock is root-owned; restrict it with the
+# Tecnativa Docker Socket Proxy for an additional layer of defence.
+#
+# Path constraint: Nextflow passes data paths to the host runtime, which
+# resolves them against the *host* filesystem.  Mount host data directories
+# at the IDENTICAL absolute path (host_path:host_path).  Configure the real
+# paths in Settings once; use the same paths in the volumes block below.
+
+services:
+  odin-app-api:
+    image: norceresearch1/odin-mobilelab-api:v1.0.1
+    container_name: odin-app-api
+    restart: unless-stopped
+    # No ports exposed — the API is only reachable from within the Docker
+    # Compose network. The frontend nginx proxies /api/ to odin-app-api:8080
+    # internally; the browser never connects to port 8080 directly.
+    # IMPORTANT: every absolute path passed via an environment variable
+    # (ODIN_PIPELINE_ROOT, ODIN_WORK_DIR, ODIN_TMP_DIR, ODIN_STORE_DIR,
+    # ODIN_CA_CERT, etc.) must also appear as an identical host:container bind
+    # mount in the volumes block below.  Nextflow spawns sibling containers via
+    # the Docker socket — they resolve paths on the host filesystem, so a path
+    # that is only visible inside this container will not be found by pipeline
+    # containers.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # ODIN_PIPELINE_ROOT must be set in .env — no default.
+      - ${ODIN_PIPELINE_ROOT}:${ODIN_PIPELINE_ROOT}
+      # Temporary concat workspace path (optional but recommended).
+      # Must be mounted identically so task containers can access staged inputs.
+      - ${ODIN_TMP_DIR:-/var/tmp}:${ODIN_TMP_DIR:-/var/tmp}
+      # WSL2-native work dir for Nextflow tasks — must be a bind mount so that
+      # sibling containers launched via the Docker socket can access the same
+      # path from the host.  Falls back to /tmp/odin_work when not set (the
+      # code then uses ODIN_PIPELINE_ROOT/.../work instead).
+      - ${ODIN_WORK_DIR:-/tmp/odin_work}:${ODIN_WORK_DIR:-/tmp/odin_work}
+      # Persistent app state (SQLite, settings export, etc.) on Docker-managed
+      # Linux storage rather than a Windows bind mount.
+      - odin-demo-data:/app/data
+      # Databases directory — only needed if databases live OUTSIDE ODIN_PIPELINE_ROOT.
+      # By default databases are under $ODIN_PIPELINE_ROOT/databases, which is already
+      # covered by the ODIN_PIPELINE_ROOT mount above.  Uncomment and set
+      # ODIN_DATABASE_PATH in .env only if your database path is on a different drive.
+      # - ${ODIN_DATABASE_PATH}:${ODIN_DATABASE_PATH}:ro
+    environment:
+      # SQLite database and app state inside the named volume
+      - ODIN_DATA_DIR=/app/data
+      # Root data directory — all subdirectory defaults are derived from this
+      - ODIN_PIPELINE_ROOT=${ODIN_PIPELINE_ROOT}
+      # Temporary directory for FASTQ concatenation before pipeline launch
+      - ODIN_TMP_DIR=${ODIN_TMP_DIR:-/var/tmp}
+      # Kraken2/Bracken database directory (only if outside ODIN_PIPELINE_ROOT)
+      - ODIN_DATABASE_PATH=${ODIN_DATABASE_PATH:-}
+      # Directory containing seed CSVs — defaults to $ODIN_PIPELINE_ROOT/seed
+      # Override only if your seed files are elsewhere:
+      # - ODIN_SEED_DIR=/custom/path/to/seed
+      - ODIN_SEED_DIR=${ODIN_SEED_DIR:-${ODIN_PIPELINE_ROOT}/seed}
+      # nf-core/taxprofiler release tag to pull from GitHub
+      - TAXPROFILER_REVISION=${TAXPROFILER_REVISION:-1.2.6}
+      # Nextflow config file — defaults to the config baked into the image.
+      # To use a custom config, place it under ODIN_PIPELINE_ROOT and override:
+      # - NEXTFLOW_CONFIG_FILE=${ODIN_PIPELINE_ROOT}/config/odin.config
+      - NEXTFLOW_CONFIG_FILE=${NEXTFLOW_CONFIG_FILE:-/app/config/odin.config}
+      # NXF_ASSETS: Nextflow pipeline asset cache — must be mounted identically
+      # (host_path:host_path) for DooD. Defaults to $ODIN_PIPELINE_ROOT/nf/assets.
+      # On Windows/WSL2, move to a WSL2-native path to avoid JGit/v9fs failures:
+      # set ODIN_NF_DIR=/home/<user>/odin_nf in .env and uncomment:
+      # - NXF_ASSETS=${ODIN_NF_DIR}/assets
+      # - ${ODIN_NF_DIR}/assets:${ODIN_NF_DIR}/assets  # (add to volumes above)
+      - NXF_ASSETS=${NXF_ASSETS:-${ODIN_PIPELINE_ROOT}/nf/assets}
+      # Nextflow storeDir for caching wf-metagenomics/mpox downloads.
+      # Same WSL2 recommendation as NXF_ASSETS above.
+      # - ODIN_STORE_DIR=${ODIN_NF_DIR}/store
+      # - ${ODIN_NF_DIR}/store:${ODIN_NF_DIR}/store  # (add to volumes above)
+      - ODIN_STORE_DIR=${ODIN_STORE_DIR:-${ODIN_PIPELINE_ROOT}/nf/store}
+      # Optional: explicit path to the taxprofiler databases CSV.
+      # Default: $ODIN_PIPELINE_ROOT/input_sheets/databases.csv (auto-detected).
+      - ODIN_DATABASES_FILE=${ODIN_DATABASES_FILE:-}
+      # Optional: path to the pathogens Excel file for Kraken2 result annotation.
+      - ODIN_PATHOGENS_FILE=${ODIN_PATHOGENS_FILE:-}
+      # Corporate CA cert for SSL-intercepting firewalls.
+      # Auto-discovered from $ODIN_PIPELINE_ROOT/ca/ at runtime — no env var needed
+      # if you place the cert there.  Only set ODIN_CA_CERT if the cert is stored
+      # outside ODIN_PIPELINE_ROOT (also add a volume mount for that path).
+      - ODIN_CA_CERT=${ODIN_CA_CERT:-}
+      # WSL2-native Linux path for Nextflow work dirs — avoids v9fs I/O failures
+      # on Windows filesystem mounts. Recommended: /home/<user>/odin_work
+      - ODIN_WORK_DIR=${ODIN_WORK_DIR:-}
+      # Override directory for ODIN streaming logs and .nextflow.log
+      - ODIN_LOG_DIR=${ODIN_LOG_DIR:-}
+      # Squirrel image used for mpox phylogenetic post-processing.
+      # Must match the image tag in the squirrel service below.
+      - SQUIRREL_IMAGE=${SQUIRREL_IMAGE:-articnetworkorg/squirrel:1.3.2}
+
+  # No-op service whose sole purpose is to ensure the squirrel image is pulled
+  # at `docker compose up` time rather than on-demand during the first pipeline run.
+  # The container runs `true` and exits immediately (restart: "no").
+  squirrel:
+    image: ${SQUIRREL_IMAGE:-articnetworkorg/squirrel:1.3.2}
+    entrypoint: ["true"]
+    restart: "no"
+
+  odin-app-client:
+    image: norceresearch1/odin-mobilelab-ui:v1.0.1
+    container_name: odin-app-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - odin-app-api
+
+volumes:
+  odin-demo-data:
+    name: odin-demo-data
