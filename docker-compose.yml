@@ -15,7 +15,7 @@
 
 services:
   odin-app-api:
-    image: norceresearch1/odin-mobilelab-api:v1.0.1
+    image: norceresearch1/odin-mobilelab-api:v1.0.2
     container_name: odin-app-api
     restart: unless-stopped
     # No ports exposed — the API is only reachable from within the Docker
@@ -107,7 +107,7 @@ services:
     restart: "no"
 
   odin-app-client:
-    image: norceresearch1/odin-mobilelab-ui:v1.0.1
+    image: norceresearch1/odin-mobilelab-ui:v1.0.2
     container_name: odin-app-client
     restart: unless-stopped
     ports:
